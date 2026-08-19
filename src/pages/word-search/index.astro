@@ -1,0 +1,44 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import WordSearchGenerator from '../../components/WordSearchGenerator.astro';
+import { WS_CATEGORIES, wsByCategory, WS_TOPICS } from '../../data/wordsearch.js';
+
+const groups = wsByCategory();
+const starter = ['PUZZLE', 'HIDDEN', 'LETTERS', 'SEARCH', 'FIND', 'WORDS', 'GRID', 'CIRCLE'];
+const title = 'Word Search Generator — Free & Printable | Printablery';
+const description = 'Free word search maker. Type your own words or pick a ready-made theme, choose the size and difficulty, and print the puzzle with an optional answer key.';
+---
+<Layout title={title} description={description} canonicalPath="/word-search/">
+  <section class="wrap" style="padding-top:2.2rem;">
+    <p class="eyebrow">Word search generator</p>
+    <h1 class="mt0">Make your own word search</h1>
+    <p class="lede" style="max-width:62ch;">Type any list of words, or <a href="#themes">pick a ready-made theme</a>. Choose the grid size and difficulty, then print the puzzle with an optional answer key.</p>
+  </section>
+
+  <section class="wrap" style="margin-top:1.5rem;">
+    <WordSearchGenerator title="Word Search" words={starter} />
+  </section>
+
+  <section class="wrap" id="themes" style="margin-top:1rem;">
+    <hr class="divider" />
+    <p class="eyebrow">Ready-made themes</p>
+    <h2 class="mt0">Start from a theme</h2>
+    <p style="color:var(--ink-soft); max-width:60ch;">Each theme comes with a curated word list, its own printable page, and difficulty you control. Tap one to open its generator.</p>
+    {Object.entries(groups).map(([key, list]) => (
+      <div class="cat-block">
+        <div class="cat-head">
+          <span class="cdot" style={`background:${WS_CATEGORIES[key].color}`}></span>
+          <h2>{WS_CATEGORIES[key].label}</h2>
+        </div>
+        <div class="topic-grid">
+          {list.map((t) => (
+            <a class="topic-tile" href={`/word-search/${t.slug}/`} style={`border-left-color:${WS_CATEGORIES[key].color}`}>
+              {t.title} word search
+              <small>{t.words.length} words</small>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+  </section>
+</Layout>

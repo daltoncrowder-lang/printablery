@@ -1,0 +1,39 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SITE } from '../site.js';
+const title = 'Terms of Use | Printablery';
+const description = 'The terms that govern use of Printablery.';
+const updated = 'August 2026';
+// NOTE: Standard starting template — have it reviewed before you rely on it.
+---
+<Layout title={title} description={description} canonicalPath="/terms/">
+  <section class="wrap narrow" style="padding-top:2.2rem;">
+    <p class="eyebrow">Legal</p>
+    <h1 class="mt0">Terms of Use</h1>
+    <p style="color:var(--ink-soft);">Last updated: {updated}</p>
+    <div class="prose">
+      <p>By using {SITE.domain} (“Printablery”), you agree to these terms. If you don't agree, please don't use the site.</p>
+
+      <h2>Using the cards you make</h2>
+      <p>Bingo cards you generate and print are yours to use for personal, educational, classroom, party, church, workplace, and community purposes, including at events where a small entry fee or fundraiser is involved. You may not resell the generator itself or repackage Printablery's content as a competing product or paid printable pack.</p>
+
+      <h2>Acceptable use</h2>
+      <p>Don't use the site to break the law, to infringe someone's rights, or to attempt to disrupt, overload, or reverse-engineer the service. Don't scrape the site at a scale that degrades it for others.</p>
+
+      <h2>Availability</h2>
+      <p>Printablery is provided “as is,” without warranties of any kind. We aim to keep it running and accurate, but we don't guarantee it will always be available, error-free, or suited to a particular purpose.</p>
+
+      <h2>Limitation of liability</h2>
+      <p>To the fullest extent permitted by law, {SITE.name} is not liable for indirect or consequential damages arising from your use of the site. Your sole remedy if you're unhappy with the site is to stop using it.</p>
+
+      <h2>Paid plans</h2>
+      <p>If you purchase a Pro subscription, billing terms, renewal, and cancellation are presented at checkout. You can cancel a subscription at any time; access continues until the end of the current billing period.</p>
+
+      <h2>Changes</h2>
+      <p>We may update these terms as the site changes. Continued use after an update means you accept the revised terms.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about these terms can be sent to the contact address published on our site.</p>
+    </div>
+  </section>
+</Layout>

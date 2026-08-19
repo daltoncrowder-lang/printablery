@@ -1,0 +1,44 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BingoGenerator from '../../components/BingoGenerator.astro';
+import { CATEGORIES, topicsByCategory, TOPICS } from '../../data/topics.js';
+
+const groups = topicsByCategory();
+const starter = ['Free space', 'Your word', 'Add more below', 'One per line', 'Pick a theme →'];
+const title = 'Bingo Card Generator — Free & Printable | Printablery';
+const description = 'Free online bingo card generator. Type your own words or start from a ready-made theme, choose the grid size, and print unique cards or save as PDF.';
+---
+<Layout title={title} description={description} canonicalPath="/bingo/">
+  <section class="wrap" style="padding-top:2.2rem;">
+    <p class="eyebrow">Bingo generator</p>
+    <h1 class="mt0">Make your own bingo cards</h1>
+    <p class="lede" style="max-width:60ch;">Type any list of words below, or <a href="#themes">pick a ready-made theme</a> to start with real content already filled in. Set the size, generate a stack of unique cards, and print.</p>
+  </section>
+
+  <section class="wrap" style="margin-top:1.5rem;">
+    <BingoGenerator title="Custom Bingo" items={starter} accent="#6D28D9" />
+  </section>
+
+  <section class="wrap" id="themes" style="margin-top:1rem;">
+    <hr class="divider" />
+    <p class="eyebrow">Ready-made themes</p>
+    <h2 class="mt0">Start from a theme</h2>
+    <p style="color:var(--ink-soft); max-width:60ch;">Each theme comes pre-filled with {TOPICS.length > 0 ? 'dozens of' : ''} words, its own guide, and a page you can share. Tap one to open its generator.</p>
+    {Object.entries(groups).map(([key, list]) => (
+      <div class="cat-block">
+        <div class="cat-head">
+          <span class="cdot" style={`background:${CATEGORIES[key].color}`}></span>
+          <h2>{CATEGORIES[key].label}</h2>
+        </div>
+        <div class="topic-grid">
+          {list.map((t) => (
+            <a class="topic-tile" href={`/bingo/${t.slug}/`} style={`border-left-color:${CATEGORIES[key].color}`}>
+              {t.title} bingo
+              <small>{t.items.length} words</small>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+  </section>
+</Layout>

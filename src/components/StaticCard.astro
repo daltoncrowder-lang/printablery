@@ -1,0 +1,30 @@
+---
+// A pre-filled, server-rendered sample card. Purely visual content for the
+// hero and topic pages — the interactive version is the generator component.
+const { title = 'Bingo', items = [], size = 5, accent = '#6D28D9' } = Astro.props;
+const DAUBERS = ['#E5266D', '#F97316', '#0EA5A5', '#2563EB', '#DB2777'];
+const letters = 'BINGO'.slice(0, size).split('');
+const cells = size * size;
+const hasCenter = size % 2 === 1;
+const centerIdx = hasCenter ? Math.floor(cells / 2) : -1;
+
+// deterministic sample fill (no randomness at build time)
+const pool = items.length ? items : Array.from({ length: cells }, (_, i) => `Item ${i + 1}`);
+const grid = [];
+let p = 0;
+for (let i = 0; i < cells; i++) {
+  if (i === centerIdx) grid.push({ free: true });
+  else { grid.push({ text: pool[p % pool.length] }); p++; }
+}
+---
+<div class="bingo-card" role="img" aria-label={`Example ${title} bingo card`}>
+  <div class="bc-title">{title}</div>
+  <div class="bingo-head" style={`grid-template-columns:repeat(${size},1fr)`}>
+    {letters.map((L, i) => <span style={`background:${DAUBERS[i % DAUBERS.length]}`}>{L}</span>)}
+  </div>
+  <div class="bingo-grid" style={`grid-template-columns:repeat(${size},1fr)`}>
+    {grid.map((c) => c.free
+      ? <div class="cell free" style={`background:${accent}`}><span>FREE</span></div>
+      : <div class="cell">{c.text}</div>)}
+  </div>
+</div>

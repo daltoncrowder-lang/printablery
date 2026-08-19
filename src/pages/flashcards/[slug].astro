@@ -1,0 +1,69 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import FlashcardGenerator from '../../components/FlashcardGenerator.astro';
+import Ad from '../../components/Ad.astro';
+import { FC_TOPICS, FC_CATEGORIES, getFCTopic, fcSiblings } from '../../data/flashcards.js';
+import { getTopic as getBingoTopic } from '../../data/topics.js';
+import { getWSTopic } from '../../data/wordsearch.js';
+
+export function getStaticPaths() {
+  return FC_TOPICS.map((t) => ({ params: { slug: t.slug } }));
+}
+
+const { slug } = Astro.params;
+const topic = getFCTopic(slug);
+const cat = FC_CATEGORIES[topic.category];
+const siblings = fcSiblings(topic, 5);
+const bingoMatch = getBingoTopic(slug);
+const wsMatch = getWSTopic(slug);
+
+const title = `${topic.title} Flashcards — Free Printable | Printablery`;
+const description = `Free printable ${topic.title} flashcards. Edit the cards, choose a size, and print fold-over cards to cut and study. No signup required.`;
+---
+<Layout title={title} description={description} canonicalPath={`/flashcards/${topic.slug}/`}>
+  <section class="wrap" style="padding-top:2rem;">
+    <a class="chip" href="/flashcards/" style="margin-bottom:1rem;">
+      <span class="cdot" style={`background:${cat.color}`}></span> {cat.label} · all flashcards
+    </a>
+    <h1 class="mt0">{topic.title} Flashcards</h1>
+    <p class="lede" style="max-width:62ch;">{topic.intro}</p>
+  </section>
+
+  <section class="wrap" style="margin-top:1.4rem;">
+    <FlashcardGenerator title={topic.title} pairs={topic.pairs} />
+  </section>
+
+  <section class="wrap narrow" style="margin-top:2.5rem;">
+    {(bingoMatch || wsMatch) && (
+      <p class="badge-note">
+        Same theme, more ways to practice:
+        {bingoMatch && <> <a href={`/bingo/${slug}/`}>{topic.title} bingo</a></>}
+        {bingoMatch && wsMatch && <> ·</>}
+        {wsMatch && <> <a href={`/word-search/${slug}/`}>{topic.title} word search</a></>}.
+      </p>
+    )}
+
+    <h2>What's in this {topic.title.toLowerCase()} set</h2>
+    <p class="prose">Every card is a front and a back. Edit the list in the generator above — change the wording, add your own cards, or trim it down for a shorter study session.</p>
+    <p class="prose" style="color:var(--ink-soft); font-family:var(--mono); font-size:.9rem;">{topic.pairs.map((p) => `${p.front} → ${p.back}`).join('  ·  ')}</p>
+
+    <Ad slot="contentInline" />
+
+    <h2>How to print and fold</h2>
+    <ol class="prose">
+      <li>Choose how many cards fit per page, then print — single-sided, on any printer.</li>
+      <li>Cut along the outlines to separate the cards.</li>
+      <li>Fold each card on the dashed line. The prompt faces one way, the answer the other.</li>
+      <li>Turn on “study reversed” to quiz answer-first — handy for language sets.</li>
+    </ol>
+
+    <h2>More flashcard sets</h2>
+    <div class="siblings">
+      {siblings.map((s) => (
+        <a class="chip" href={`/flashcards/${s.slug}/`}>
+          <span class="cdot" style={`background:${FC_CATEGORIES[s.category].color}`}></span>{s.title}
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>

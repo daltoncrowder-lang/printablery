@@ -1,0 +1,21 @@
+---
+import { SITE, AD_SLOTS } from '../site.js';
+// Ad units render ONLY on content pages and ONLY after approval.
+// Never place this inside the interactive generator (invalid-traffic risk).
+const { slot = 'contentInline' } = Astro.props;
+const slotId = AD_SLOTS[slot] ?? AD_SLOTS.contentInline;
+const showReal = SITE.adsenseApproved;
+---
+{showReal && (
+  <div class="ad-slot">
+    <ins
+      class="adsbygoogle"
+      style="display:block"
+      data-ad-client={SITE.adsenseClient}
+      data-ad-slot={slotId}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    ></ins>
+    <script is:inline>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+)}

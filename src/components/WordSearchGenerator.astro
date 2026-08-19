@@ -1,0 +1,221 @@
+---
+const { title = 'Word Search', words = [] } = Astro.props;
+const wordText = words.join('\n');
+---
+<div class="generator no-print">
+  <div class="controls">
+    <div class="field">
+      <label for="ws-title">Puzzle title</label>
+      <input id="ws-title" type="text" value={title} maxlength="40" />
+    </div>
+
+    <div class="field">
+      <label>Grid size</label>
+      <div class="seg" id="ws-size" role="group" aria-label="Grid size">
+        <button type="button" data-size="11">11×11</button>
+        <button type="button" data-size="13" aria-pressed="true">13×13</button>
+        <button type="button" data-size="15">15×15</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Difficulty</label>
+      <div class="seg" id="ws-diff" role="group" aria-label="Difficulty">
+        <button type="button" data-diff="easy">Easy</button>
+        <button type="button" data-diff="medium" aria-pressed="true">Medium</button>
+        <button type="button" data-diff="hard">Hard</button>
+      </div>
+      <div class="hint">Easy hides words across and down only. Hard adds diagonals and backwards.</div>
+    </div>
+
+    <div class="field">
+      <label class="check"><input id="ws-ans" type="checkbox" /> Show answers in preview</label>
+      <div class="hint">The printout can include a separate answer key page.</div>
+    </div>
+
+    <div class="field">
+      <label for="ws-words">Words (one per line)</label>
+      <textarea id="ws-words" spellcheck="false">{wordText}</textarea>
+      <div class="hint" id="ws-count"></div>
+    </div>
+
+    <div class="field pro-lock">
+      <span class="pro-badge">Pro</span>
+      <div style="margin-top:.5rem; font-size:.9rem;">
+        <strong>Pro</strong> makes a set of different puzzles from the same word list
+        and exports the whole thing — puzzles plus answer keys — as one PDF.
+      </div>
+      <a class="btn btn-ghost" style="margin-top:.6rem; width:100%;" href="/pricing/">See Pro</a>
+    </div>
+  </div>
+
+  <div>
+    <div class="row" style="justify-content:space-between; margin-bottom:.8rem;">
+      <h3 class="mt0" style="margin:0;">Live preview</h3>
+      <button class="btn btn-ghost" id="ws-shuffle" type="button">↻ Shuffle</button>
+    </div>
+    <div id="ws-preview"></div>
+    <div id="ws-warn" class="badge-note" style="display:none; margin-top:1rem;"></div>
+    <div class="row" style="margin-top:1.2rem; gap:.6rem; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="ws-print" type="button">🖨 Print puzzle</button>
+      <span class="hint" style="align-self:center;">Choose “Save as PDF” in the print dialog for a free PDF.</span>
+    </div>
+  </div>
+</div>
+
+<div class="print-sheet" id="ws-sheet" aria-hidden="true"></div>
+
+<script>
+  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const DIRS = {
+    easy:   [[0,1],[1,0]],
+    medium: [[0,1],[1,0],[1,1]],
+    hard:   [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]],
+  };
+
+  function normalize(words, size) {
+    const seen = new Set(); const out = [];
+    for (const raw of words) {
+      const w = String(raw).toUpperCase().replace(/[^A-Z]/g, '');
+      if (w.length < 3 || w.length > size || seen.has(w)) continue;
+      seen.add(w); out.push(w);
+    }
+    return out.sort((a, b) => b.length - a.length);
+  }
+
+  function buildPuzzle(words, size, difficulty) {
+    const dirs = DIRS[difficulty] || DIRS.medium;
+    const list = normalize(words, size);
+    const grid = Array.from({ length: size }, () => Array(size).fill(null));
+    const placements = []; const unplaced = [];
+    for (const word of list) {
+      let placed = false;
+      for (let a = 0; a < 250 && !placed; a++) {
+        const [dr, dc] = dirs[Math.floor(Math.random() * dirs.length)];
+        const r0 = Math.floor(Math.random() * size);
+        const c0 = Math.floor(Math.random() * size);
+        const rE = r0 + dr * (word.length - 1), cE = c0 + dc * (word.length - 1);
+        if (rE < 0 || rE >= size || cE < 0 || cE >= size) continue;
+        let ok = true;
+        for (let i = 0; i < word.length; i++) {
+          const ch = grid[r0 + dr * i][c0 + dc * i];
+          if (ch !== null && ch !== word[i]) { ok = false; break; }
+        }
+        if (!ok) continue;
+        const cells = [];
+        for (let i = 0; i < word.length; i++) {
+          const r = r0 + dr * i, c = c0 + dc * i;
+          grid[r][c] = word[i]; cells.push(r + ',' + c);
+        }
+        placements.push({ word, cells }); placed = true;
+      }
+      if (!placed) unplaced.push(word);
+    }
+    for (let r = 0; r < size; r++)
+      for (let c = 0; c < size; c++)
+        if (grid[r][c] === null) grid[r][c] = ALPHABET[Math.floor(Math.random() * 26)];
+    return { grid, placements, unplaced, size };
+  }
+
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    title: $('ws-title'), size: $('ws-size'), diff: $('ws-diff'), ans: $('ws-ans'),
+    words: $('ws-words'), count: $('ws-count'), preview: $('ws-preview'),
+    warn: $('ws-warn'), print: $('ws-print'), shuffle: $('ws-shuffle'), sheet: $('ws-sheet'),
+  };
+  let size = 13, difficulty = 'medium', current = null;
+
+  const parseWords = () => els.words.value.split('\n').map((s) => s.trim()).filter(Boolean);
+
+  function puzzleEl(result, { showAnswers, titleText }) {
+    const box = document.createElement('div');
+    const t = document.createElement('div');
+    t.className = 'ws-title'; t.textContent = titleText;
+    box.appendChild(t);
+
+    const hits = new Set();
+    if (showAnswers) result.placements.forEach((p) => p.cells.forEach((k) => hits.add(k)));
+
+    const grid = document.createElement('div');
+    grid.className = 'ws-puzzle';
+    grid.style.gridTemplateColumns = `repeat(${result.size},1fr)`;
+    for (let r = 0; r < result.size; r++) {
+      for (let c = 0; c < result.size; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'ws-cell' + (hits.has(r + ',' + c) ? ' hit' : '');
+        cell.textContent = result.grid[r][c];
+        grid.appendChild(cell);
+      }
+    }
+    box.appendChild(grid);
+
+    const bank = document.createElement('div');
+    bank.className = 'ws-bank';
+    result.placements.forEach((p) => {
+      const w = document.createElement('span');
+      w.className = 'w'; w.textContent = p.word;
+      bank.appendChild(w);
+    });
+    box.appendChild(bank);
+    return box;
+  }
+
+  function render() {
+    const words = parseWords();
+    const need = els.count;
+    els.preview.innerHTML = '';
+    if (words.length === 0) {
+      els.preview.innerHTML = '<div class="badge-note">Add a few words above to build a puzzle.</div>';
+      els.count.textContent = ''; els.warn.style.display = 'none';
+      return;
+    }
+    current = buildPuzzle(words, size, difficulty);
+    els.count.textContent = `${current.placements.length} of ${words.length} words placed on a ${size}×${size} grid`;
+    els.preview.appendChild(puzzleEl(current, { showAnswers: els.ans.checked, titleText: els.title.value }));
+    if (current.unplaced.length) {
+      els.warn.style.display = 'block';
+      els.warn.textContent = `Couldn't fit: ${current.unplaced.join(', ')}. Try a larger grid or an easier difficulty.`;
+    } else {
+      els.warn.style.display = 'none';
+    }
+  }
+
+  function doPrint() {
+    if (!current) return;
+    els.sheet.innerHTML = '';
+    const card = document.createElement('div');
+    card.className = 'print-card';
+    card.appendChild(puzzleEl(current, { showAnswers: false, titleText: els.title.value }));
+    els.sheet.appendChild(card);
+    if (els.ans.checked) {
+      const ans = document.createElement('div');
+      ans.className = 'print-card ws-answer-page';
+      ans.appendChild(puzzleEl(current, { showAnswers: true, titleText: els.title.value + ' — Answer Key' }));
+      els.sheet.appendChild(ans);
+    }
+    window.print();
+  }
+
+  els.size.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-size]'); if (!b) return;
+    size = parseInt(b.dataset.size, 10);
+    [...els.size.querySelectorAll('button')].forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    render();
+  });
+  els.diff.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-diff]'); if (!b) return;
+    difficulty = b.dataset.diff;
+    [...els.diff.querySelectorAll('button')].forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    render();
+  });
+  els.ans.addEventListener('change', render);
+  els.words.addEventListener('input', render);
+  els.title.addEventListener('input', () => {
+    const t = els.preview.querySelector('.ws-title');
+    if (t) t.textContent = els.title.value;
+  });
+  els.shuffle.addEventListener('click', render);
+  els.print.addEventListener('click', doPrint);
+
+  render();
+</script>

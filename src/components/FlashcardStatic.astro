@@ -1,0 +1,12 @@
+---
+const { pairs = [], limit = 4 } = Astro.props;
+const sample = pairs.slice(0, limit);
+---
+<div class="fc-sheet-preview">
+  {sample.map((p) => (
+    <div class="fc-card">
+      <div class="fc-half fc-front">{p.front}</div>
+      <div class="fc-half fc-back">{p.back}</div>
+    </div>
+  ))}
+</div>

@@ -1,0 +1,47 @@
+---
+import Layout from '../layouts/Layout.astro';
+const title = 'Pricing — Free & Pro | Printablery';
+const description = 'Printablery is free to make and print bingo cards. Pro adds 30-card bulk sets and one-click PDF export.';
+// PLACEHOLDER pricing — final numbers not yet decided. Checkout is not wired
+// (no Stripe keys shipped). Wire Stripe + set real prices before launch.
+---
+<Layout title={title} description={description} canonicalPath="/pricing/">
+  <section class="wrap narrow" style="padding-top:2.2rem;">
+    <p class="eyebrow">Pricing</p>
+    <h1 class="mt0">Free to play. Pro for the heavy lifting.</h1>
+    <p class="lede">Everything you need to make and print bingo cards is free. Pro is for teachers and organizers who print in bulk.</p>
+
+    <div class="topic-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); margin-top:1.8rem; gap:1rem;">
+      <div class="controls" style="padding:1.5rem;">
+        <h2 style="margin-top:0;">Free</h2>
+        <p style="font-family:var(--mono); font-size:1.6rem; margin:.2rem 0 1rem;">$0</p>
+        <ul class="prose" style="font-size:.98rem;">
+          <li>Every theme, fully customizable</li>
+          <li>3×3, 4×4, and 5×5 grids</li>
+          <li>Up to 6 cards per print</li>
+          <li>Print, or save as PDF from your browser</li>
+          <li>No account required</li>
+        </ul>
+        <a class="btn btn-primary" style="width:100%;" href="/bingo/">Start making cards</a>
+      </div>
+
+      <div class="controls" style="padding:1.5rem; border-color:var(--grape);">
+        <div class="row" style="justify-content:space-between;">
+          <h2 style="margin-top:0;">Pro</h2>
+          <span class="pro-badge">Coming soon</span>
+        </div>
+        <p style="font-family:var(--mono); font-size:1.6rem; margin:.2rem 0 .2rem;">$4.99<span style="font-size:.9rem; color:var(--ink-soft);">/mo</span></p>
+        <p style="font-size:.82rem; color:var(--ink-soft); margin-top:0;">Launch pricing — subject to change.</p>
+        <ul class="prose" style="font-size:.98rem;">
+          <li>Everything in Free</li>
+          <li><strong>30-card bulk sets</strong> for a whole class</li>
+          <li><strong>One-click PDF export</strong></li>
+          <li>Priority access to new generators</li>
+        </ul>
+        <button class="btn btn-ghost" style="width:100%;" disabled>Pro is on the way</button>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:1.6rem; color:var(--ink-soft); font-size:.95rem;">Pro checkout isn't open yet. In the meantime, the free tier prints everything you need for most games.</p>
+  </section>
+</Layout>

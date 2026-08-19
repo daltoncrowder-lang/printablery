@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/Layout.astro';
+const title = 'Bingo Generator FAQ — Free Printable Bingo Cards | Printablery';
+const description = 'Answers to common questions about making free printable bingo cards: cost, PDF export, custom words, grid sizes, class sets, and printing.';
+
+const faqs = [
+  { q: 'Is Printablery free?', a: 'Yes. Making, customizing, and printing bingo cards is completely free, and you don\'t need an account. A paid Pro tier adds large bulk sets and one-click PDF export, but everything you need to play is free.' },
+  { q: 'Do I need to sign up or create an account?', a: 'No. You can build and print cards without signing up for anything. Just open a theme or the generator, edit the words, and print.' },
+  { q: 'Can I save my bingo cards as a PDF?', a: 'Yes, for free. In the print dialog, choose “Save as PDF” as the destination instead of a printer. Pro adds a one-click PDF button for convenience, but the browser method costs nothing.' },
+  { q: 'Can I use my own words instead of a theme?', a: 'Absolutely. Every generator has a text box where you type one word or phrase per line. Start from a ready-made theme and edit it, or clear it and paste your own list.' },
+  { q: 'How many words do I need?', a: 'A 5×5 card needs 24 words (25 with no free space), a 4×4 needs 16, and a 3×3 needs 8 or 9. Add a few extra beyond the minimum so each printed card comes out unique.' },
+  { q: 'What grid sizes can I make?', a: 'Three, four, and five squares per side (3×3, 4×4, 5×5). Odd sizes have a center square that can be a free space; the 4×4 grid has no center.' },
+  { q: 'Are the cards actually different from each other?', a: 'Yes. Each card is independently shuffled from your word list, so when you print several at once, players get different boards.' },
+  { q: 'Can I print a whole classroom set?', a: 'You can print up to six cards at a time for free. The Pro tier raises that to 30-card bulk sets for larger classes and events.' },
+  { q: 'Can I add a free space in the middle?', a: 'Yes, on 3×3 and 5×5 grids. Toggle it on or off in the generator. The 4×4 grid has no true center, so it has no free space.' },
+  { q: 'Will the cards fit on normal paper?', a: 'Yes. Cards are laid out for standard US letter paper — one per page for 5×5 grids and two per page for smaller sizes so you can cut them apart.' },
+  { q: 'Can I use these for a fundraiser or event?', a: 'Yes. Printed cards are yours to use for classroom, party, church, workplace, and community events. See the Terms for the full details.' },
+  { q: 'Does it work on a phone or tablet?', a: 'Yes. The generator works in any modern browser. For the best printing experience, printing from a computer connected to a printer is easiest.' },
+];
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((f) => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+};
+---
+<Layout title={title} description={description} canonicalPath="/faq/">
+  <section class="wrap narrow" style="padding-top:2.2rem;">
+    <p class="eyebrow">FAQ</p>
+    <h1 class="mt0">Questions, answered</h1>
+    <div class="prose" style="margin-top:1.4rem;">
+      {faqs.map((f) => (
+        <div style="margin-bottom:1.6rem;">
+          <h3 style="margin-bottom:.3rem;">{f.q}</h3>
+          <p style="margin:0;">{f.a}</p>
+        </div>
+      ))}
+    </div>
+    <p style="margin-top:2rem;"><a class="btn btn-primary" href="/bingo/">Make bingo cards →</a></p>
+  </section>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+</Layout>

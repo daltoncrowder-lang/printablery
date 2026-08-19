@@ -1,0 +1,68 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import WordSearchGenerator from '../../components/WordSearchGenerator.astro';
+import Ad from '../../components/Ad.astro';
+import { WS_TOPICS, WS_CATEGORIES, getWSTopic, wsSiblings } from '../../data/wordsearch.js';
+import { getTopic as getBingoTopic } from '../../data/topics.js';
+import { getFCTopic } from '../../data/flashcards.js';
+
+export function getStaticPaths() {
+  return WS_TOPICS.map((t) => ({ params: { slug: t.slug } }));
+}
+
+const { slug } = Astro.params;
+const topic = getWSTopic(slug);
+const cat = WS_CATEGORIES[topic.category];
+const siblings = wsSiblings(topic, 5);
+const bingoMatch = getBingoTopic(slug); // cross-sell if the same theme exists as bingo
+const fcMatch = getFCTopic(slug); // …or as flashcards
+
+const title = `${topic.title} Word Search — Free Printable | Printablery`;
+const description = `Free printable ${topic.title} word search. Choose the size and difficulty, reveal an answer key, and print instantly. No signup required.`;
+---
+<Layout title={title} description={description} canonicalPath={`/word-search/${topic.slug}/`}>
+  <section class="wrap" style="padding-top:2rem;">
+    <a class="chip" href="/word-search/" style="margin-bottom:1rem;">
+      <span class="cdot" style={`background:${cat.color}`}></span> {cat.label} · all word searches
+    </a>
+    <h1 class="mt0">{topic.title} Word Search</h1>
+    <p class="lede" style="max-width:62ch;">{topic.intro}</p>
+  </section>
+
+  <section class="wrap" style="margin-top:1.4rem;">
+    <WordSearchGenerator title={`${topic.title} Word Search`} words={topic.words} />
+  </section>
+
+  <section class="wrap narrow" style="margin-top:2.5rem;">
+    {(bingoMatch || fcMatch) && (
+      <p class="badge-note">
+        Doing a {topic.title.toLowerCase()} theme? Also make
+        {bingoMatch && <> <a href={`/bingo/${slug}/`}>{topic.title} bingo</a></>}
+        {bingoMatch && fcMatch && <> ·</>}
+        {fcMatch && <> <a href={`/flashcards/${slug}/`}>{topic.title} flashcards</a></>}.
+      </p>
+    )}
+
+    <h2>Words hidden in this {topic.title.toLowerCase()} puzzle</h2>
+    <p class="prose">These are the words tucked into the grid. Edit the list in the generator above to add your own, swap the spelling words for this week's unit, or make the puzzle shorter for younger solvers.</p>
+    <p class="prose" style="color:var(--ink-soft); font-family:var(--mono); font-size:.95rem;">{topic.words.join(' · ')}</p>
+
+    <Ad slot="contentInline" />
+
+    <h2>How to use this word search</h2>
+    <ol class="prose">
+      <li>Pick a grid size and difficulty — smaller and easier for young solvers, larger with diagonals and backwards words for a challenge.</li>
+      <li>Print the puzzle, or turn on the answer key to print a solution page too.</li>
+      <li>Solvers circle each word as they find it and cross it off the word bank.</li>
+    </ol>
+
+    <h2>More word searches</h2>
+    <div class="siblings">
+      {siblings.map((s) => (
+        <a class="chip" href={`/word-search/${s.slug}/`}>
+          <span class="cdot" style={`background:${WS_CATEGORIES[s.category].color}`}></span>{s.title}
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>

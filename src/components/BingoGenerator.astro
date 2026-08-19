@@ -1,0 +1,224 @@
+---
+// Client-side bingo generator. Free tier: up to 6 cards, print (and print-to-PDF
+// via the browser). Pro tier (gated): 30-card bulk sets + one-click PDF export.
+const { title = 'Bingo', items = [], accent = '#6D28D9' } = Astro.props;
+const itemText = items.join('\n');
+const FREE_CARD_LIMIT = 6;
+---
+<div class="generator no-print">
+  <div class="controls">
+    <div class="field">
+      <label for="bg-title">Card title</label>
+      <input id="bg-title" type="text" value={title} maxlength="40" />
+    </div>
+
+    <div class="field">
+      <label>Grid size</label>
+      <div class="seg" id="bg-size" role="group" aria-label="Grid size">
+        <button type="button" data-size="3">3×3</button>
+        <button type="button" data-size="4">4×4</button>
+        <button type="button" data-size="5" aria-pressed="true">5×5</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="check">
+        <input id="bg-free" type="checkbox" checked />
+        Free space in the center
+      </label>
+      <div class="hint">Applies to 3×3 and 5×5 grids (they have a center cell).</div>
+    </div>
+
+    <div class="field">
+      <label for="bg-count">Number of cards</label>
+      <input id="bg-count" type="number" min="1" max="6" value="1" />
+      <div class="hint">Each card is randomly shuffled so no two match.</div>
+    </div>
+
+    <div class="field">
+      <label for="bg-items">Words &amp; phrases (one per line)</label>
+      <textarea id="bg-items" spellcheck="false">{itemText}</textarea>
+      <div class="hint" id="bg-itemcount"></div>
+    </div>
+
+    <div class="field pro-lock">
+      <span class="pro-badge">Pro</span>
+      <div style="margin-top:.5rem; font-size:.9rem;">
+        Need a whole class set? <strong>Pro</strong> unlocks 30-card bulk sets and
+        one-click PDF export.
+      </div>
+      <a class="btn btn-ghost" style="margin-top:.6rem; width:100%;" href="/pricing/">See Pro</a>
+    </div>
+  </div>
+
+  <div>
+    <div class="row" style="justify-content:space-between; margin-bottom:.8rem;">
+      <h3 class="mt0" style="margin:0;">Live preview</h3>
+      <button class="btn btn-ghost" id="bg-shuffle" type="button">↻ Shuffle</button>
+    </div>
+    <div id="bg-preview" class="card-preview"></div>
+    <div id="bg-warn" class="badge-note" style="display:none; margin-top:1rem;"></div>
+    <div class="row" style="margin-top:1.2rem; gap:.6rem; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="bg-print" type="button">🖨 Print cards</button>
+      <span class="hint" style="align-self:center;">Tip: choose “Save as PDF” in the print dialog for a free PDF.</span>
+    </div>
+  </div>
+</div>
+
+<!-- Filled on print only -->
+<div class="print-sheet" id="bg-sheet" aria-hidden="true"></div>
+
+<script define:vars={{ accent, FREE_CARD_LIMIT }}>
+  const DAUBERS = ['#E5266D', '#F97316', '#0EA5A5', '#2563EB', '#DB2777'];
+
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    title: $('bg-title'), size: $('bg-size'), free: $('bg-free'),
+    count: $('bg-count'), items: $('bg-items'), itemcount: $('bg-itemcount'),
+    preview: $('bg-preview'), warn: $('bg-warn'), print: $('bg-print'),
+    shuffle: $('bg-shuffle'), sheet: $('bg-sheet'),
+  };
+
+  let size = 5;
+
+  function parseItems() {
+    return els.items.value.split('\n').map((s) => s.trim()).filter(Boolean);
+  }
+
+  function shuffle(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function hasCenter() { return size % 2 === 1; }
+  function useFree() { return els.free.checked && hasCenter(); }
+
+  // Build one card's cell array (strings; center 'FREE' marker as {free:true}).
+  function buildCard(pool) {
+    const cells = size * size;
+    const need = cells - (useFree() ? 1 : 0);
+    let picks = shuffle(pool);
+    // If not enough unique items, cycle to fill (with a warning shown elsewhere).
+    while (picks.length < need) picks = picks.concat(shuffle(pool));
+    picks = picks.slice(0, need);
+    const grid = [];
+    const centerIdx = useFree() ? Math.floor(cells / 2) : -1;
+    let p = 0;
+    for (let i = 0; i < cells; i++) {
+      if (i === centerIdx) grid.push({ free: true });
+      else grid.push({ text: picks[p++] });
+    }
+    return grid;
+  }
+
+  function headerLetters() {
+    return 'BINGO'.slice(0, size).split('');
+  }
+
+  function renderCard(grid, title) {
+    const letters = headerLetters();
+    const card = document.createElement('div');
+    card.className = 'bingo-card';
+
+    const t = document.createElement('div');
+    t.className = 'bc-title';
+    t.textContent = title || 'Bingo';
+    card.appendChild(t);
+
+    const head = document.createElement('div');
+    head.className = 'bingo-head';
+    head.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+    letters.forEach((L, i) => {
+      const s = document.createElement('span');
+      s.textContent = L;
+      s.style.background = DAUBERS[i % DAUBERS.length];
+      head.appendChild(s);
+    });
+    card.appendChild(head);
+
+    const g = document.createElement('div');
+    g.className = 'bingo-grid';
+    g.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+    grid.forEach((c) => {
+      const cell = document.createElement('div');
+      if (c.free) {
+        cell.className = 'cell free';
+        cell.style.background = accent;
+        const sp = document.createElement('span');
+        sp.textContent = 'FREE';
+        cell.appendChild(sp);
+      } else {
+        cell.className = 'cell';
+        cell.textContent = c.text;
+      }
+      g.appendChild(cell);
+    });
+    card.appendChild(g);
+    return card;
+  }
+
+  function updateItemCount(pool) {
+    const need = size * size - (useFree() ? 1 : 0);
+    els.itemcount.textContent = `${pool.length} entries · a ${size}×${size} card needs ${need}`;
+    if (pool.length < need) {
+      els.warn.style.display = 'block';
+      els.warn.textContent = `Only ${pool.length} entries for a ${size}×${size} card (needs ${need}). Add more so every cell is unique — for now some will repeat.`;
+    } else {
+      els.warn.style.display = 'none';
+    }
+  }
+
+  function renderPreview() {
+    const pool = parseItems();
+    updateItemCount(pool);
+    els.preview.innerHTML = '';
+    if (pool.length === 0) {
+      els.preview.innerHTML = '<div class="badge-note">Add a few words above to see a card.</div>';
+      return;
+    }
+    els.preview.appendChild(renderCard(buildCard(pool), els.title.value));
+  }
+
+  function doPrint() {
+    const pool = parseItems();
+    if (pool.length === 0) return;
+    let count = parseInt(els.count.value, 10) || 1;
+    count = Math.max(1, Math.min(FREE_CARD_LIMIT, count));
+    els.count.value = count;
+
+    els.sheet.innerHTML = '';
+    els.sheet.className = 'print-sheet' + (size <= 4 && count > 1 ? ' two-up' : '');
+    for (let i = 0; i < count; i++) {
+      const wrap = document.createElement('div');
+      wrap.className = 'print-card';
+      wrap.appendChild(renderCard(buildCard(pool), els.title.value));
+      els.sheet.appendChild(wrap);
+    }
+    window.print();
+  }
+
+  // events
+  els.size.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-size]');
+    if (!btn) return;
+    size = parseInt(btn.dataset.size, 10);
+    [...els.size.querySelectorAll('button')].forEach((b) =>
+      b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+    renderPreview();
+  });
+  els.free.addEventListener('change', renderPreview);
+  els.items.addEventListener('input', renderPreview);
+  els.title.addEventListener('input', renderPreview);
+  els.shuffle.addEventListener('click', renderPreview);
+  els.print.addEventListener('click', doPrint);
+  els.count.addEventListener('change', () => {
+    let v = parseInt(els.count.value, 10) || 1;
+    els.count.value = Math.max(1, Math.min(FREE_CARD_LIMIT, v));
+  });
+
+  renderPreview();
+</script>

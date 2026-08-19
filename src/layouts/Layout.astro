@@ -1,0 +1,87 @@
+---
+import '../styles/global.css';
+import { SITE, NAV } from '../site.js';
+
+const {
+  title,
+  description,
+  canonicalPath,
+  noindex = false,
+} = Astro.props;
+
+const canonical = new URL(canonicalPath ?? Astro.url.pathname, SITE.url).href.toLowerCase();
+const year = new Date().getFullYear();
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {noindex && <meta name="robots" content="noindex, follow" />}
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+
+    {SITE.googleSiteVerification && (
+      <meta name="google-site-verification" content={SITE.googleSiteVerification} />
+    )}
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+
+    {/*
+      AdSense + consent.
+      Both stay OFF until SITE.adsenseApproved is flipped to true post-approval.
+      Google's Funding Choices message is a TCF v2.2-certified CMP — enable it
+      in the AdSense dashboard (Privacy & messaging) so the tag below has a
+      message to serve. Do NOT ship a hand-rolled cookie banner.
+    */}
+    {SITE.adsenseApproved && (
+      <>
+        <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE.adsenseClient}`} crossorigin="anonymous"></script>
+        <script async src={`https://fundingchoicesmessages.google.com/i/${SITE.adsensePublisher}?ers=1`}></script>
+      </>
+    )}
+  </head>
+  <body>
+    <header class="site-head">
+      <div class="wrap">
+        <a class="brand" href="/">Printabler<span>y</span><span class="dot" aria-hidden="true"></span></a>
+        <nav class="nav" aria-label="Primary">
+          {NAV.map((n) => <a href={n.href}>{n.label}</a>)}
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-foot">
+      <div class="wrap">
+        <span>© {year} {SITE.name}</span>
+        <span>Free printable bingo cards — no signup required.</span>
+        <div class="foot-links">
+          <a href="/bingo/">Bingo generator</a>
+          <a href="/faq/">FAQ</a>
+          <a href="/about/">About</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/terms/">Terms</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

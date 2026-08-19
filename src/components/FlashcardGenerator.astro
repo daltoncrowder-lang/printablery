@@ -1,0 +1,128 @@
+---
+const { title = 'Flashcards', pairs = [] } = Astro.props;
+const pairText = pairs.map((p) => `${p.front} | ${p.back}`).join('\n');
+---
+<div class="generator no-print">
+  <div class="controls">
+    <div class="field">
+      <label for="fc-title">Set title</label>
+      <input id="fc-title" type="text" value={title} maxlength="40" />
+    </div>
+
+    <div class="field">
+      <label>Cards per page</label>
+      <div class="seg" id="fc-density" role="group" aria-label="Cards per page">
+        <button type="button" data-d="4">4</button>
+        <button type="button" data-d="6" aria-pressed="true">6</button>
+        <button type="button" data-d="8">8</button>
+      </div>
+      <div class="hint">Bigger number = smaller cards.</div>
+    </div>
+
+    <div class="field">
+      <label class="check"><input id="fc-rev" type="checkbox" /> Study reversed (answer on front)</label>
+      <div class="hint">Great for “say it in Spanish” or recall-first practice.</div>
+    </div>
+
+    <div class="field">
+      <label for="fc-pairs">Cards — one per line as <code>front | back</code></label>
+      <textarea id="fc-pairs" spellcheck="false">{pairText}</textarea>
+      <div class="hint" id="fc-count"></div>
+    </div>
+
+    <div class="field pro-lock">
+      <span class="pro-badge">Pro</span>
+      <div style="margin-top:.5rem; font-size:.9rem;">
+        <strong>Pro</strong> exports the whole deck as a PDF and adds a classic
+        two-sided (front/back) print layout for duplex printers.
+      </div>
+      <a class="btn btn-ghost" style="margin-top:.6rem; width:100%;" href="/pricing/">See Pro</a>
+    </div>
+  </div>
+
+  <div>
+    <div class="row" style="justify-content:space-between; margin-bottom:.8rem;">
+      <h3 class="mt0" style="margin:0;">Live preview</h3>
+      <span class="hint fc-fold-note">Print · cut out · fold on the dashed line</span>
+    </div>
+    <div id="fc-preview" class="fc-sheet-preview"></div>
+    <div class="row" style="margin-top:1.2rem; gap:.6rem; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="fc-print" type="button">🖨 Print flashcards</button>
+      <span class="hint" style="align-self:center;">Choose “Save as PDF” in the print dialog for a free PDF.</span>
+    </div>
+  </div>
+</div>
+
+<div class="print-sheet" id="fc-sheet" aria-hidden="true"></div>
+
+<script>
+  const DENSITY = { 4: '1.9in', 6: '1.25in', 8: '0.92in' };
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    title: $('fc-title'), density: $('fc-density'), rev: $('fc-rev'),
+    pairs: $('fc-pairs'), count: $('fc-count'), preview: $('fc-preview'),
+    print: $('fc-print'), sheet: $('fc-sheet'),
+  };
+  let density = 6;
+
+  function parsePairs() {
+    return els.pairs.value.split('\n').map((line) => {
+      const t = line.trim();
+      if (!t) return null;
+      const i = t.indexOf('|');
+      if (i === -1) return { front: t, back: '' };
+      return { front: t.slice(0, i).trim(), back: t.slice(i + 1).trim() };
+    }).filter(Boolean);
+  }
+
+  function cardEl(pair, { reversed, halfHeight }) {
+    const front = reversed ? pair.back : pair.front;
+    const back = reversed ? pair.front : pair.back;
+    const card = document.createElement('div');
+    card.className = 'fc-card';
+    const f = document.createElement('div');
+    f.className = 'fc-half fc-front'; f.textContent = front;
+    const b = document.createElement('div');
+    b.className = 'fc-half fc-back'; b.textContent = back;
+    if (halfHeight) { f.style.height = halfHeight; b.style.height = halfHeight; }
+    card.appendChild(f); card.appendChild(b);
+    return card;
+  }
+
+  function renderPreview() {
+    const pairs = parsePairs();
+    els.count.textContent = `${pairs.length} cards`;
+    els.preview.innerHTML = '';
+    if (pairs.length === 0) {
+      els.preview.innerHTML = '<div class="badge-note">Add cards above as “front | back”.</div>';
+      return;
+    }
+    const reversed = els.rev.checked;
+    pairs.forEach((p) => els.preview.appendChild(cardEl(p, { reversed })));
+  }
+
+  function doPrint() {
+    const pairs = parsePairs();
+    if (!pairs.length) return;
+    const reversed = els.rev.checked;
+    const halfHeight = DENSITY[density];
+    els.sheet.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'fc-sheet-preview';
+    pairs.forEach((p) => grid.appendChild(cardEl(p, { reversed, halfHeight })));
+    els.sheet.appendChild(grid);
+    window.print();
+  }
+
+  els.density.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-d]'); if (!b) return;
+    density = parseInt(b.dataset.d, 10);
+    [...els.density.querySelectorAll('button')].forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  });
+  els.rev.addEventListener('change', renderPreview);
+  els.pairs.addEventListener('input', renderPreview);
+  els.title.addEventListener('input', renderPreview);
+  els.print.addEventListener('click', doPrint);
+
+  renderPreview();
+</script>

@@ -1,0 +1,114 @@
+---
+import Layout from '../layouts/Layout.astro';
+import StaticCard from '../components/StaticCard.astro';
+import WordSearchStatic from '../components/WordSearchStatic.astro';
+import FlashcardStatic from '../components/FlashcardStatic.astro';
+import Ad from '../components/Ad.astro';
+import { getTopic, CATEGORIES, TOPICS } from '../data/topics.js';
+import { getWSTopic, WS_TOPICS } from '../data/wordsearch.js';
+import { getFCTopic, FC_TOPICS } from '../data/flashcards.js';
+
+const heroCard = getTopic('birthday-party');
+const popularBingo = ['christmas','halloween','birthday-party','baby-shower','meeting-bingo','thanksgiving','valentines-day','animals'].map(getTopic);
+const popularWS = ['christmas','halloween','animals','ocean-animals','space','dinosaurs','summer','sports'].map(getWSTopic);
+const popularFC = ['multiplication','addition','state-capitals','spanish-colors','antonyms','planets','shapes','division'].map(getFCTopic);
+const wsVisual = getWSTopic('animals');
+const fcVisual = getFCTopic('multiplication');
+
+const title = 'Printablery — Free Printable Bingo Cards & Word Searches';
+const description = 'Make and print free bingo cards and word searches for holidays, classrooms, and parties. Pick a theme, customize the words, print or save as PDF. No signup.';
+---
+<Layout title={title} description={description} canonicalPath="/">
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow">Free · No signup · Print instantly</p>
+        <h1>Printables you can make in about a minute.</h1>
+        <p class="lede">Bingo cards and word searches for whatever you're planning — a classroom party, a baby shower, a road trip, a meeting you'd rather not be in. Pick a theme, tweak the words, print.</p>
+        <div class="row" style="margin-top:1.6rem; gap:.7rem; flex-wrap:wrap;">
+          <a class="btn btn-primary" href="/bingo/">Make bingo cards →</a>
+          <a class="btn btn-ghost" href="/word-search/">Make a word search →</a>
+        </div>
+      </div>
+      <div class="card-preview">
+        <StaticCard title={heroCard.title} items={heroCard.items} size={5} accent={CATEGORIES[heroCard.category].color} />
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <hr class="divider" />
+
+    <section aria-labelledby="tool-bingo">
+      <div class="cat-head"><span class="cdot" style="background:#6D28D9"></span><h2 id="tool-bingo">Bingo cards</h2></div>
+      <p style="max-width:60ch; color:var(--ink-soft);">Unique, shuffled cards for a whole room — 3×3 to 5×5, free-space toggle, print a stack at once. {TOPICS.length} ready-made themes.</p>
+      <div class="topic-grid" style="margin-top:1rem;">
+        {popularBingo.map((t) => (
+          <a class="topic-tile" href={`/bingo/${t.slug}/`} style={`border-left-color:${CATEGORIES[t.category].color}`}>{t.title} bingo</a>
+        ))}
+      </div>
+      <p style="margin-top:1rem;"><a href="/bingo/">See all {TOPICS.length} bingo themes →</a></p>
+    </section>
+
+    <hr class="divider" />
+
+    <section aria-labelledby="tool-ws">
+      <div class="hero-grid" style="align-items:center;">
+        <div>
+          <div class="cat-head"><span class="cdot" style="background:#0EA5A5"></span><h2 id="tool-ws">Word searches</h2></div>
+          <p style="max-width:56ch; color:var(--ink-soft);">Type your words or start from a theme, set the size and difficulty, and print with an optional answer key. {WS_TOPICS.length} ready-made themes.</p>
+          <div class="topic-grid" style="margin-top:1rem;">
+            {popularWS.map((t) => (
+              <a class="topic-tile" href={`/word-search/${t.slug}/`} style="border-left-color:#0EA5A5">{t.title}</a>
+            ))}
+          </div>
+          <p style="margin-top:1rem;"><a href="/word-search/">See all {WS_TOPICS.length} word search themes →</a></p>
+        </div>
+        <div>
+          <WordSearchStatic title={wsVisual.title} words={wsVisual.words} size={11} />
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section aria-labelledby="tool-fc">
+      <div class="hero-grid" style="align-items:center;">
+        <div>
+          <div class="cat-head"><span class="cdot" style="background:#7C3AED"></span><h2 id="tool-fc">Flashcards</h2></div>
+          <p style="max-width:56ch; color:var(--ink-soft);">Math facts, capitals, Spanish, and more — or type your own front/back cards. Print single-sided, cut, and fold. {FC_TOPICS.length} ready-made sets.</p>
+          <div class="topic-grid" style="margin-top:1rem;">
+            {popularFC.map((t) => (
+              <a class="topic-tile" href={`/flashcards/${t.slug}/`} style="border-left-color:#7C3AED">{t.title}</a>
+            ))}
+          </div>
+          <p style="margin-top:1rem;"><a href="/flashcards/">See all {FC_TOPICS.length} flashcard sets →</a></p>
+        </div>
+        <div>
+          <FlashcardStatic pairs={fcVisual.pairs} limit={4} />
+        </div>
+      </div>
+    </section>
+
+    <Ad slot="contentInline" />
+
+    <hr class="divider" />
+
+    <section aria-labelledby="how">
+      <p class="eyebrow">How it works</p>
+      <h2 id="how" class="mt0">Three steps to a printout</h2>
+      <div class="topic-grid" style="margin-top:1.2rem; grid-template-columns:repeat(auto-fit,minmax(240px,1fr));">
+        <div class="badge-note"><strong style="font-family:var(--mono)">01 —</strong> Pick a theme, or start blank and type your own words.</div>
+        <div class="badge-note"><strong style="font-family:var(--mono)">02 —</strong> Set the size and options to match your players.</div>
+        <div class="badge-note"><strong style="font-family:var(--mono)">03 —</strong> Print, or save as PDF straight from the print dialog.</div>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <section class="narrow" style="margin:0 auto;">
+      <h2>Made for teachers, parents, and party hosts</h2>
+      <p class="prose">Printablery keeps the busywork out of party prep and lesson planning. Every theme arrives with real words already filled in, a title you can rename, and a clean print layout for standard paper — no account, no watermark, no download wall. Start with <a href="/bingo/">bingo</a> or a <a href="/word-search/">word search</a>, or read the <a href="/how-to-make-bingo-cards/">guide to making bingo cards</a>.</p>
+    </section>
+  </div>
+</Layout>

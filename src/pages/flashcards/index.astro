@@ -1,0 +1,49 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import FlashcardGenerator from '../../components/FlashcardGenerator.astro';
+import { FC_CATEGORIES, fcByCategory, FC_TOPICS } from '../../data/flashcards.js';
+
+const groups = fcByCategory();
+const starter = [
+  { front: 'front', back: 'back' },
+  { front: '2 + 2', back: '4' },
+  { front: 'red', back: 'rojo' },
+  { front: 'edit these →', back: 'one per line' },
+];
+const title = 'Flashcard Maker — Free Printable Flashcards | Printablery';
+const description = 'Free printable flashcard maker. Type your own front/back cards or pick a ready-made set, then print fold-over cards — cut, fold, and study. No signup.';
+---
+<Layout title={title} description={description} canonicalPath="/flashcards/">
+  <section class="wrap" style="padding-top:2.2rem;">
+    <p class="eyebrow">Flashcard maker</p>
+    <h1 class="mt0">Make your own flashcards</h1>
+    <p class="lede" style="max-width:62ch;">Type your cards as <code>front | back</code>, or <a href="#themes">pick a ready-made set</a>. Print, cut, and fold on the dashed line — no double-sided printing needed.</p>
+  </section>
+
+  <section class="wrap" style="margin-top:1.5rem;">
+    <FlashcardGenerator title="Flashcards" pairs={starter} />
+  </section>
+
+  <section class="wrap" id="themes" style="margin-top:1rem;">
+    <hr class="divider" />
+    <p class="eyebrow">Ready-made sets</p>
+    <h2 class="mt0">Start from a set</h2>
+    <p style="color:var(--ink-soft); max-width:60ch;">Each set is filled with cards you can use as-is or edit. Tap one to open its generator.</p>
+    {Object.entries(groups).map(([key, list]) => (
+      <div class="cat-block">
+        <div class="cat-head">
+          <span class="cdot" style={`background:${FC_CATEGORIES[key].color}`}></span>
+          <h2>{FC_CATEGORIES[key].label}</h2>
+        </div>
+        <div class="topic-grid">
+          {list.map((t) => (
+            <a class="topic-tile" href={`/flashcards/${t.slug}/`} style={`border-left-color:${FC_CATEGORIES[key].color}`}>
+              {t.title}
+              <small>{t.pairs.length} cards</small>
+            </a>
+          ))}
+        </div>
+      </div>
+    ))}
+  </section>
+</Layout>

@@ -1,0 +1,72 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import BingoGenerator from '../../components/BingoGenerator.astro';
+import Ad from '../../components/Ad.astro';
+import { TOPICS, CATEGORIES, getTopic, siblingTopics } from '../../data/topics.js';
+import { getWSTopic } from '../../data/wordsearch.js';
+import { getFCTopic } from '../../data/flashcards.js';
+
+export function getStaticPaths() {
+  return TOPICS.map((t) => ({ params: { slug: t.slug } }));
+}
+
+const { slug } = Astro.params;
+const topic = getTopic(slug);
+const cat = CATEGORIES[topic.category];
+const siblings = siblingTopics(topic, 5);
+const wsMatch = getWSTopic(slug); // cross-sell if the same theme exists as a word search
+const fcMatch = getFCTopic(slug); // …or as flashcards
+
+const title = `${topic.title} Bingo Cards — Free Printable Generator | Printablery`;
+const description = `Make and print free ${topic.title} bingo cards. Customize the words, download as PDF, and print instantly. No signup required.`;
+---
+<Layout title={title} description={description} canonicalPath={`/bingo/${topic.slug}/`}>
+  <section class="wrap" style="padding-top:2rem;">
+    <a class="chip" href="/bingo/" style="margin-bottom:1rem;">
+      <span class="cdot" style={`background:${cat.color}`}></span> {cat.label} · all themes
+    </a>
+    <h1 class="mt0">{topic.title} Bingo Cards</h1>
+    <p class="lede" style="max-width:62ch;">{topic.intro}</p>
+  </section>
+
+  <section class="wrap" style="margin-top:1.4rem;">
+    <BingoGenerator title={`${topic.title} Bingo`} items={topic.items} accent={cat.color} />
+  </section>
+
+  <section class="wrap narrow" style="margin-top:2.5rem;">
+    {topic.note && <p class="badge-note">{topic.note}</p>}
+
+    {(wsMatch || fcMatch) && (
+      <p class="badge-note">
+        Same theme, different game:
+        {wsMatch && <> <a href={`/word-search/${slug}/`}>{topic.title} word search</a></>}
+        {wsMatch && fcMatch && <> ·</>}
+        {fcMatch && <> <a href={`/flashcards/${slug}/`}>{topic.title} flashcards</a></>}.
+      </p>
+    )}
+
+    <h2>What's on your {topic.title.toLowerCase()} bingo cards</h2>
+    <p class="prose">Every card is built from this word bank, shuffled so no two players get the same board. Edit the list in the generator above to add your own — remove what doesn't fit, or paste in a fresh set entirely.</p>
+    <p class="prose" style="color:var(--ink-soft); font-size:.98rem;">{topic.items.join(' · ')}</p>
+
+    <Ad slot="contentInline" />
+
+    <h2>How to run the game</h2>
+    <ol class="prose">
+      <li>Print one card per player. For a class or a big party, bump up the card count and print a stack.</li>
+      <li>Hand out markers — dot stickers, dry beans, or a pen all work.</li>
+      <li>Call out words at random and have players mark any match on their card.</li>
+      <li>First to complete a row, column, or diagonal shouts “Bingo!” Check the marked squares against your called list.</li>
+    </ol>
+    <p class="prose">Want a longer walkthrough with variations for younger kids? See the <a href="/how-to-make-bingo-cards/">full how-to guide</a>.</p>
+
+    <h2>More themes like this</h2>
+    <div class="siblings">
+      {siblings.map((s) => (
+        <a class="chip" href={`/bingo/${s.slug}/`}>
+          <span class="cdot" style={`background:${CATEGORIES[s.category].color}`}></span>{s.title} bingo
+        </a>
+      ))}
+    </div>
+  </section>
+</Layout>
